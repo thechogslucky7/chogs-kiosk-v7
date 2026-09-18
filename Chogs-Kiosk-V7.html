@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7619e8">
+<title>Chogs Kiosk — Income Monitor V7</title>
+<link rel="apple-touch-icon" href="chogs-kiosk-icon.png">
+<link rel="icon" type="image/png" href="chogs-kiosk-icon.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+:root{--ink:#182044;--purple:#5c13c8;--bg:#f6f4ff}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+body{padding-bottom:92px}button,input,select{font:inherit}button{border:0}
+.hero{color:#fff;padding:25px 22px 16px;overflow:hidden;position:relative;background:radial-gradient(75% 90% at 0% 0%,#ff31a8 0%,transparent 52%),radial-gradient(75% 100% at 100% 20%,#087dff 0%,transparent 58%),linear-gradient(135deg,#8b1de4,#6b17dc 48%,#0879ef)}
+.top{position:relative;display:flex;align-items:center;gap:14px}.logo{width:84px;height:84px;border-radius:20px;overflow:hidden;display:grid;place-items:center;flex:0 0 84px;background:#fa589e}.logo img{width:100%;height:100%;object-fit:cover}.brand{min-width:0;flex:1}.brand h1{font-size:29px;line-height:1;margin:0 0 6px}.brand p{font-size:18px;font-weight:600;margin:0 0 5px}.brand small{font-size:14px}.head-buttons{display:flex;gap:8px}.head-btn{width:44px;height:44px;border-radius:14px;background:rgba(45,40,160,.38);color:#fff;font-size:23px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.tab{height:57px;border-radius:17px;background:rgba(48,105,232,.58);color:#fff;font-size:18px;font-weight:800}.tab.active{background:#fff;color:#4e0caf}
+main{max-width:760px;margin:auto;padding:9px 20px 22px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{height:106px;border-radius:20px;color:#fff;padding:14px;position:relative;overflow:hidden;box-shadow:0 7px 16px rgba(55,31,120,.13)}.green{background:linear-gradient(135deg,#07c979,#18bba0)}.violet{background:linear-gradient(135deg,#9e11e7,#3e47ee)}.blue{background:linear-gradient(135deg,#087bf4,#08b9e9)}.pink{background:linear-gradient(135deg,#ff176a,#ef3e9f)}.orange{background:linear-gradient(135deg,#ff7100,#ffd11a)}.cyan{background:linear-gradient(135deg,#0bc6ca,#10afd9)}.stat-head{display:flex;align-items:center;gap:11px;font-size:19px;font-weight:700}.stat-icon{width:56px;height:56px;border-radius:16px;background:rgba(0,0,0,.12);display:grid;place-items:center;flex:0 0 56px;font-size:28px}.stat-value{font-size:29px;font-weight:900;margin:3px 0 0 67px}.stat-count{font-size:27px}#cashin{text-align:center;margin-left:0}
+.panel{margin-top:16px;background:rgba(255,255,255,.97);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(46,29,103,.09)}.title-row{display:flex;align-items:center;gap:13px;margin-bottom:19px}.plus{width:68px;height:68px;flex:0 0 68px;border-radius:50%;background:linear-gradient(145deg,#8420e8,#6418d0);color:#fff;display:grid;place-items:center;font-size:44px}.title-text{flex:1}.title-text h2{margin:0;color:#42109e;font-size:27px}.title-text p{margin:4px 0 0;color:#7b8198;font-size:16px}
+.form-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:15px 13px}.field label{display:block;font-weight:800;font-size:16px;margin:0 0 7px}.field input,.field select{display:block;width:100%;height:66px;border:2px solid #dcd5f5;border-radius:14px;background:#fbfaff;color:#1c2442;padding:0 16px;font-size:17px}.full{grid-column:1/-1}.save{height:66px;width:100%;border-radius:14px;color:#fff;font-size:21px;font-weight:900;background:linear-gradient(90deg,#087ff2,#6e1fe0 52%,#f5228c)}.action{height:62px;border-radius:14px;background:#efebff;color:#4d12ad;font-size:18px;font-weight:900;padding:0 12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px}.delete{background:#fde1e6;color:#d71b42}
+.history-row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #eeeaf7;font-size:14px}.history-row b{font-size:15px}.history-row small{color:#777f98}.edit-btn{margin-top:5px;padding:6px 10px;border-radius:8px;background:#eee7ff;color:#5713c8;font-weight:800}.empty{text-align:center;color:#858ba0;padding:16px}
+.status{margin-top:12px;padding:11px 13px;border-radius:12px;background:#eee7ff;color:#4d12ad;font-weight:700;font-size:14px}.status.ok{background:#e6fff2;color:#08794c}.status.err{background:#ffe9ee;color:#b3123c}
+.login{position:fixed;inset:0;background:rgba(246,244,255,.98);z-index:200;display:none;align-items:center;justify-content:center;padding:22px}.login.show{display:flex}.login-card{width:min(430px,100%);background:#fff;border-radius:24px;padding:24px;box-shadow:0 12px 35px rgba(46,29,103,.16)}.login-card h2{color:#42109e;margin:0 0 8px}.login-card p{color:#777f98;margin-top:0}.login-card input{width:100%;height:56px;border:2px solid #dcd5f5;border-radius:14px;padding:0 14px;margin:6px 0;font-size:16px}.login-card button{width:100%;height:56px;border-radius:14px;background:linear-gradient(90deg,#087ff2,#6e1fe0,#f5228c);color:#fff;font-weight:900;margin-top:10px}.secondary{background:#eee7ff!important;color:#5713c8!important}
+.bottom{position:fixed;left:0;right:0;bottom:0;height:92px;z-index:50;background:rgba(255,255,255,.98);border-top:1px solid #ebe8f5;display:grid;grid-template-columns:repeat(5,1fr);padding:6px 7px}.nav{background:transparent;border-radius:15px;color:#465072;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:13px;font-weight:700}.nav.active{background:#eee7ff;color:#5713c8}.nav-icon{font-size:27px}.toast{position:fixed;left:50%;bottom:104px;transform:translate(-50%,15px);background:#201934;color:#fff;padding:11px 16px;border-radius:13px;opacity:0;transition:.2s;z-index:300;font-weight:700}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:430px){.logo{width:76px;height:76px;flex-basis:76px}.brand h1{font-size:25px}.brand p{font-size:17px}.brand small{font-size:12px}.stat{height:105px;padding:13px 12px}.stat-icon{width:50px;height:50px;flex-basis:50px}.stat-head{font-size:17px;gap:8px}.stat-value{margin-left:58px;font-size:27px}.panel{padding:17px 13px}.title-text h2{font-size:25px}.field input,.field select{height:64px;font-size:16px;padding:0 11px}.save{height:65px;font-size:20px}}
+</style>
+</head>
+<body>
+<div class="login show" id="login">
+  <div class="login-card">
+    <h2>☁️ Chogs Kiosk V7</h2>
+    <p>Sign in so your transactions can sync between your iPhone, tablet and laptop.</p>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="signIn()">Sign In</button>
+    <button class="secondary" onclick="signUp()">Create Account</button>
+    <div id="loginStatus" class="status">V7 cloud setup is required before first use.</div>
+  </div>
+</div>
+
+<header class="hero">
+ <div class="top">
+  <div class="logo"><img src="chogs-kiosk-icon.png" alt="Chogs Kiosk logo"></div>
+  <div class="brand"><h1>Chogs Kiosk</h1><p>Income Monitor · V7</p><small>Cloud sync · iPhone · tablet · laptop</small></div>
+  <div class="head-buttons"><button class="head-btn" onclick="signOut()">↪</button></div>
+ </div>
+ <div class="tabs"><button class="tab active" data-period="today">Today</button><button class="tab" data-period="week">This Week</button><button class="tab" data-period="month">This Month</button></div>
+</header>
+<main>
+ <section class="stats">
+  <div class="stat green"><div class="stat-head"><div class="stat-icon">☷</div><span>Transactions</span></div><div class="stat-value stat-count" id="count">0</div></div>
+  <div class="stat violet"><div class="stat-head"><div class="stat-icon">▣</div><span>Total Income</span></div><div class="stat-value" id="income">₱0.00</div></div>
+  <div class="stat blue"><div class="stat-head"><div class="stat-icon">↓</div><span>Cash-In</span></div><div class="stat-value" id="cashin">₱0.00</div></div>
+  <div class="stat pink"><div class="stat-head"><div class="stat-icon">↑</div><span>Cash-Out</span></div><div class="stat-value" id="cashout">₱0.00</div></div>
+ </section>
+ <section class="panel">
+  <div class="title-row"><div class="plus">₱</div><div class="title-text"><h2>Today's Income Breakdown</h2><p>See where your commission comes from</p></div></div>
+  <div class="history-row"><span>💙 GCash Cash-In</span><strong id="breakdown-cashin">₱0.00</strong></div>
+  <div class="history-row"><span>💗 GCash Cash-Out</span><strong id="breakdown-cashout">₱0.00</strong></div>
+  <div class="history-row"><span>🧡 E-Loading</span><strong id="breakdown-eload">₱0.00</strong></div>
+  <div class="history-row"><span>🩵 Bills Payment</span><strong id="breakdown-bills">₱0.00</strong></div>
+  <div class="history-row" style="border-bottom:0"><strong>TOTAL COMMISSION</strong><strong id="breakdown-total">₱0.00</strong></div>
+ </section>
+ <section class="stats" style="margin-top:12px">
+  <div class="stat orange"><div class="stat-head"><div class="stat-icon">▯</div><span>E-Loading</span></div><div class="stat-value" id="eload">₱0.00</div></div>
+  <div class="stat cyan"><div class="stat-head"><div class="stat-icon">▤</div><span>Bills Payment</span></div><div class="stat-value" id="bills">₱0.00</div></div>
+ </section>
+ <section class="panel">
+  <div class="title-row"><div class="plus">+</div><div class="title-text"><h2>Add Transaction</h2><p>Record your daily transactions easily</p></div></div>
+  <div class="form-grid">
+   <div class="field"><label>▣ Date &amp; time</label><input id="date" type="datetime-local"></div>
+   <div class="field"><label>▱ Service</label><select id="service"><option>GCash Cash-In</option><option>GCash Cash-Out</option><option>E-Loading</option><option>Bills Payment</option></select></div>
+   <div class="field"><label>₱ Transaction amount (₱)</label><input id="amount" type="number" min="0" step="0.01" placeholder="0.00"></div>
+   <div class="field"><label>▥ Your income / commission (₱)</label><input id="commission" type="number" min="0" step="0.01" placeholder="0.00"></div>
+   <div class="field full"><label>♙ Customer / reference (optional)</label><input id="reference" type="text" placeholder="Optional"></div>
+   <div class="full"><button class="save" id="save">▣ Save Transaction</button><div class="actions"><button class="action" onclick="syncNow()">☁ Sync Now</button><button class="action" onclick="backup()">⇩ Backup</button></div></div>
+  </div>
+  <div id="cloudStatus" class="status">Connecting to cloud…</div>
+  <div class="actions"><button class="action" id="clear">⟳ Clear</button><button class="action delete" id="delete">♜ Delete All</button></div>
+ </section>
+ <section class="panel" id="historyPanel"><h2 style="margin:0;color:#42109e;font-size:25px">Transaction History</h2><div id="history"></div></section>
+</main>
+<nav class="bottom"><button class="nav active" onclick="topPage()"><span class="nav-icon">⌂</span>Dashboard</button><button class="nav" onclick="focusForm()"><span class="nav-icon">⊕</span>Add Transaction</button><button class="nav" onclick="historyPanel.scrollIntoView({behavior:'smooth'})"><span class="nav-icon">☷</span>History</button><button class="nav" onclick="syncNow()"><span class="nav-icon">☁</span>Sync</button><button class="nav" onclick="backup()"><span class="nav-icon">⇩</span>Backup</button></nav>
+<div class="toast" id="toastBox"></div>
+
+<script>
+/* V7: put your Supabase project URL and anon key here after creating the project. */
+const SUPABASE_URL="PASTE_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY="PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const cloudReady=!SUPABASE_URL.startsWith("PASTE_")&&!SUPABASE_ANON_KEY.startsWith("PASTE_");
+const sb=cloudReady?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+let period="today",editId=null,cloudRows=[];
+
+const $=id=>document.getElementById(id);
+const money=n=>"₱"+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+function localNow(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+$("date").value=localNow();
+function toast(s){const t=$("toastBox");t.textContent=s;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1800)}
+function setStatus(s,kind=""){const e=$("cloudStatus");e.textContent=s;e.className="status "+kind}
+function loginStatus(s,kind=""){const e=$("loginStatus");e.textContent=s;e.className="status "+kind}
+function visible(x){
+ const d=new Date(x.date),n=new Date();
+ if(period==="today")return d.toDateString()===n.toDateString();
+ if(period==="week"){let s=new Date(n);s.setHours(0,0,0,0);s.setDate(n.getDate()-((n.getDay()+6)%7));return d>=s}
+ return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
+}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function render(){
+ const r=cloudRows.filter(visible),sum=k=>r.reduce((a,x)=>a+Number(x[k]||0),0),by=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.amount||0),0),incomeBy=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.commission||0),0);
+ $("count").textContent=r.length;$("income").textContent=money(sum("commission"));$("cashin").textContent=money(by("GCash Cash-In"));$("cashout").textContent=money(by("GCash Cash-Out"));$("eload").textContent=money(by("E-Loading"));$("bills").textContent=money(by("Bills Payment"));
+ $("breakdown-cashin").textContent=money(incomeBy("GCash Cash-In"));$("breakdown-cashout").textContent=money(incomeBy("GCash Cash-Out"));$("breakdown-eload").textContent=money(incomeBy("E-Loading"));$("breakdown-bills").textContent=money(incomeBy("Bills Payment"));$("breakdown-total").textContent=money(sum("commission"));
+ const sorted=[...cloudRows].sort((a,b)=>new Date(b.date)-new Date(a.date));
+ $("history").innerHTML=sorted.length?sorted.map(x=>`<div class="history-row"><div><b>${esc(x.service)}</b><br><small>${new Date(x.date).toLocaleString()}${x.reference?" · "+esc(x.reference):""}</small></div><div style="text-align:right"><b>${money(x.commission)}</b><br><small>Txn ${money(x.amount)}</small><br><button class="edit-btn" onclick="editTransaction('${x.id}')">✏️ Edit</button></div></div>`).join(""):'<div class="empty">No transactions yet.</div>';
+}
+async function signUp(){
+ if(!sb){loginStatus("Add your Supabase URL and anon key first.","err");return}
+ const {data,error}=await sb.auth.signUp({email:$("email").value.trim(),password:$("password").value});
+ if(error){loginStatus(error.message,"err");return}
+ loginStatus(data.session?"Account created.":"Account created. Check your email if confirmation is enabled.","ok");
+ if(data.session)await startCloud();
+}
+async function signIn(){
+ if(!sb){loginStatus("V7 is ready, but the Supabase connection still needs to be added.","err");return}
+ const {data,error}=await sb.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error){loginStatus(error.message,"err");return}
+ await startCloud();
+}
+async function signOut(){if(sb)await sb.auth.signOut();cloudRows=[];render();$("login").classList.add("show");}
+async function startCloud(){
+ $("login").classList.remove("show");setStatus("Signed in. Loading cloud transactions…");
+ await syncNow();
+}
+async function syncNow(){
+ if(!sb){setStatus("V7 cloud setup needed: add Supabase URL + anon key.","err");return}
+ const {data:{user}}=await sb.auth.getUser();
+ if(!user){$("login").classList.add("show");setStatus("Please sign in.");return}
+ const {data,error}=await sb.from("transactions").select("*").order("date",{ascending:false});
+ if(error){setStatus(error.message,"err");return}
+ cloudRows=(data||[]).map(x=>({id:x.id,date:x.date,service:x.service,amount:Number(x.amount||0),commission:Number(x.commission||0),reference:x.reference||""}));
+ render();setStatus("☁ Synced · "+cloudRows.length+" transactions","ok");
+}
+async function saveTransaction(){
+ const amount=Number($("amount").value||0),commission=Number($("commission").value||0);
+ if(amount<=0&&commission<=0){toast("Please enter an amount or commission");return}
+ const {data:{user}}=await sb.auth.getUser();if(!user){$("login").classList.add("show");return}
+ const item={date:$("date").value||localNow(),service:$("service").value,amount,commission,reference:$("reference").value.trim(),user_id:user.id};
+ let result;
+ if(editId) result=await sb.from("transactions").update(item).eq("id",editId);
+ else result=await sb.from("transactions").insert(item);
+ if(result.error){toast("Save failed");setStatus(result.error.message,"err");return}
+ editId=null;$("save").textContent="▣ Save Transaction";clearFields();await syncNow();toast("Transaction saved ✓");
+}
+function editTransaction(id){
+ const x=cloudRows.find(r=>r.id===id);if(!x)return;
+ editId=id;$("date").value=x.date.slice(0,16);$("service").value=x.service;$("amount").value=x.amount;$("commission").value=x.commission;$("reference").value=x.reference||"";$("save").textContent="✏️ Update Transaction";focusForm();
+}
+function clearFields(){editId=null;$("save").textContent="▣ Save Transaction";$("amount").value="";$("commission").value="";$("reference").value="";$("date").value=localNow()}
+$("clear").onclick=clearFields;
+$("save").onclick=saveTransaction;
+$("delete").onclick=async()=>{if(!sb)return;if(!confirm("Delete ALL cloud transactions? This affects every device."))return;const {data:{user}}=await sb.auth.getUser();if(!user)return;const {error}=await sb.from("transactions").delete().eq("user_id",user.id);if(error){toast("Delete failed");return}await syncNow();toast("All cloud transactions deleted")};
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
+function focusForm(){document.querySelectorAll(".panel")[1].scrollIntoView({behavior:"smooth"})}
+function topPage(){window.scrollTo({top:0,behavior:"smooth"})}
+function backup(){const blob=new Blob([JSON.stringify(cloudRows,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="chogs-kiosk-v7-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Backup created")}
+if(cloudReady){sb.auth.getSession().then(({data})=>{if(data.session)startCloud();else setStatus("Cloud connected · please sign in","ok")})}else{setStatus("Setup needed · Supabase connection not added yet","err");$("login").classList.add("show")}
+render();
+</script>
+</body>
+</html>
