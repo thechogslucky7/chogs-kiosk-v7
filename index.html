@@ -261,7 +261,7 @@ function render(){
   if(sorted.length){
     $("history").innerHTML+=`<div class="history-pagination"><button onclick="historyPrev()" ${historyPage<=1?"disabled":""}>← Previous</button><div class="history-page-info">${start+1}–${Math.min(start+10,sorted.length)} of ${sorted.length}<br>Page ${historyPage} of ${historyTotalPages}</div><button onclick="historyNext()" ${historyPage>=historyTotalPages?"disabled":""}>Next →</button></div>`;
   }
- 
+}
 async function signUp(){
  if(!sb){loginStatus("Add your Supabase URL and anon key first.","err");return}
  const {data,error}=await sb.auth.signUp({email:$("email").value.trim(),password:$("password").value});
