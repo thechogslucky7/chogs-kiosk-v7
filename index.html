@@ -117,6 +117,40 @@ main{max-width:760px;margin:auto;padding:9px 20px 22px}.stats{display:grid;grid-
   .stat > div:last-child{
     font-size:27px;
   }
+
+
+.history-pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:14px;
+}
+
+.history-pagination button{
+  height:42px;
+  padding:0 14px;
+  border:0;
+  border-radius:12px;
+  background:#eee7ff;
+  color:#5713c8;
+  font-weight:900;
+  font-size:14px;
+}
+
+.history-pagination button:disabled{
+  opacity:.45;
+}
+
+.history-page-info{
+  font-size:13px;
+  font-weight:800;
+  color:#777f98;
+  text-align:center;
+  line-height:1.4;
+}
+
+</style>
 }</style>
 </head>
 <body>
@@ -183,7 +217,7 @@ const SUPABASE_URL="https://ogkigibjfpcxtbdommbj.supabase.co";
 const SUPABASE_ANON_KEY="sb_publishable_Dkbjgf9jwx-B0WGJtHa6Ww_cbXSYehe";
 const cloudReady=!SUPABASE_URL.startsWith("PASTE_")&&!SUPABASE_ANON_KEY.startsWith("PASTE_");
 const sb=cloudReady?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
-let period="today",editId=null,cloudRows=[];
+let period="today",editId=null,cloudRows=[],historyPage=1,historyTotalPages=1;
 
 const $=id=>document.getElementById(id);
 const money=n=>"₱"+Number(n||0).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -200,6 +234,34 @@ function visible(x){
 }
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function render(){
+  const r=cloudRows.filter(visible),sum=k=>r.reduce((a,x)=>a+Number(x[k]||0),0),by=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.amount||0),0),incomeBy=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.commission||0),0);
+
+  $("count").textContent=r.length;
+  $("income").textContent=money(sum("commission"));
+  $("cashin").textContent=money(by("GCash Cash-In"));
+  $("cashout").textContent=money(by("GCash Cash-Out"));
+  $("eload").textContent=money(by("E-Loading"));
+  $("bills").textContent=money(by("Bills Payment"));
+
+  $("breakdown-cashin").textContent=money(incomeBy("GCash Cash-In"));
+  $("breakdown-cashout").textContent=money(incomeBy("GCash Cash-Out"));
+  $("breakdown-eload").textContent=money(incomeBy("E-Loading"));
+  $("breakdown-bills").textContent=money(incomeBy("Bills Payment"));
+  $("breakdown-total").textContent=money(sum("commission"));
+
+  const sorted=[...cloudRows].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  historyTotalPages=Math.max(1,Math.ceil(sorted.length/10));
+  if(historyPage>historyTotalPages)historyPage=historyTotalPages;
+
+  const start=(historyPage-1)*10;
+  const pageRows=sorted.slice(start,start+10);
+
+  $("history").innerHTML=pageRows.length?pageRows.map(x=>`<div class="history-row"><div><b>${esc(x.service)}</b><br><small>${new Date(x.date).toLocaleString()}${x.reference?" · "+esc(x.reference):""}</small></div><div style="text-align:right"><b>${money(x.commission)}</b><br><small>Txn ${money(x.amount)}</small><br><button class="edit-btn" onclick="editTransaction('${x.id}')">✏️ Edit</button></div></div>`).join(""):'<div class="empty">No transactions yet.</div>';
+
+  if(sorted.length){
+    $("history").innerHTML+=`<div class="history-pagination"><button onclick="historyPrev()" ${historyPage<=1?"disabled":""}>← Previous</button><div class="history-page-info">${start+1}–${Math.min(start+10,sorted.length)} of ${sorted.length}<br>Page ${historyPage} of ${historyTotalPages}</div><button onclick="historyNext()" ${historyPage>=historyTotalPages?"disabled":""}>Next →</button></div>`;
+  }
+}
  const r=cloudRows.filter(visible),sum=k=>r.reduce((a,x)=>a+Number(x[k]||0),0),by=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.amount||0),0),incomeBy=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.commission||0),0);
  $("count").textContent=r.length;$("income").textContent=money(sum("commission"));$("cashin").textContent=money(by("GCash Cash-In"));$("cashout").textContent=money(by("GCash Cash-Out"));$("eload").textContent=money(by("E-Loading"));$("bills").textContent=money(by("Bills Payment"));
  $("breakdown-cashin").textContent=money(incomeBy("GCash Cash-In"));$("breakdown-cashout").textContent=money(incomeBy("GCash Cash-Out"));$("breakdown-eload").textContent=money(incomeBy("E-Loading"));$("breakdown-bills").textContent=money(incomeBy("Bills Payment"));$("breakdown-total").textContent=money(sum("commission"));
@@ -254,6 +316,22 @@ $("save").onclick=saveTransaction;
 $("delete").onclick=async()=>{if(!sb)return;if(!confirm("Delete ALL cloud transactions? This affects every device."))return;const {data:{user}}=await sb.auth.getUser();if(!user)return;const {error}=await sb.from("transactions").delete().eq("user_id",user.id);if(error){toast("Delete failed");return}await syncNow();toast("All cloud transactions deleted")};
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 function focusForm(){document.querySelectorAll(".panel")[1].scrollIntoView({behavior:"smooth"})}
+function historyPrev(){
+  if(historyPage>1){
+    historyPage--;
+    render();
+    $("historyPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+}
+
+function historyNext(){
+  if(historyPage<historyTotalPages){
+    historyPage++;
+    render();
+    $("historyPanel").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+}
+
 function topPage(){window.scrollTo({top:0,behavior:"smooth"})}
 function backup(){const blob=new Blob([JSON.stringify(cloudRows,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="chogs-kiosk-v7-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast("Backup created")}
 if(cloudReady){sb.auth.getSession().then(({data})=>{if(data.session)startCloud();else setStatus("Cloud connected · please sign in","ok")})}else{setStatus("Setup needed · Supabase connection not added yet","err");$("login").classList.add("show")}
