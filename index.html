@@ -232,7 +232,12 @@ function visible(x){
  if(period==="week"){let s=new Date(n);s.setHours(0,0,0,0);s.setDate(n.getDate()-((n.getDay()+6)%7));return d>=s}
  return d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth();
 }
-function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+function esc(s){...}
+function toggleSelect(id){
+  if(selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  render();
+}
 function render(){
   const r=cloudRows.filter(visible),sum=k=>r.reduce((a,x)=>a+Number(x[k]||0),0),by=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.amount||0),0),incomeBy=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.commission||0),0);
 
