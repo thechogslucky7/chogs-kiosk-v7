@@ -267,7 +267,7 @@ function render(){
   const start=(historyPage-1)*10;
   const pageRows=sorted.slice(start,start+10);
 
-  $("history").innerHTML=pageRows.length?pageRows.map(x=>`<div class="history-row"><div style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" class="tx-check" ${selectedIds.has(x.id)?"checked":""} onchange="toggleSelect('${x.id}')"><div><b>${esc(x.service)}</b><br><small>${new Date(x.date).toLocaleString()}${x.reference?" · "+esc(x.reference):""}</small></div></div><div style="text-align:right"><b>${money(x.commission)}</b><br><small>Txn ${money(x.amount)}</small><br><button class="edit-btn" onclick="editTransaction('${x.id}')">✏️ Edit</button></div></div>`).join(""):'<div class="empty">No transactions yet.</div>';
+  $("history").innerHTML=pageRows.length?pageRows.map(x=>`<div class="history-row"><div><label><input type="checkbox" ${selectedIds.has(x.id)?"checked":""} onchange="toggleSelect('${x.id}')"> Select</label><br><b>${esc(x.service)}</b><br><small>${new Date(x.date).toLocaleString()}${x.reference?" · "+esc(x.reference):""}</small></div><div style="text-align:right"><b>${money(x.commission)}</b><br><small>Txn ${money(x.amount)}</small><br><button class="edit-btn" onclick="editTransaction('${x.id}')">✏️ Edit</button></div></div>`).join(""):'<div class="empty">No transactions yet.</div>';
 
   if(sorted.length){
     $("history").innerHTML+=`<div class="history-pagination"><button onclick="historyPrev()" ${historyPage<=1?"disabled":""}>← Previous</button><div class="history-page-info">${start+1}–${Math.min(start+10,sorted.length)} of ${sorted.length}<br>Page ${historyPage} of ${historyTotalPages}</div><button onclick="historyNext()" ${historyPage>=historyTotalPages?"disabled":""}>Next →</button></div>`;
@@ -318,7 +318,7 @@ function editTransaction(id){
 function clearFields(){editId=null;$("save").textContent="▣ Save Transaction";$("amount").value="";$("commission").value="";$("reference").value="";$("date").value=localNow()}
 $("clear").onclick=clearFields;
 $("save").onclick=saveTransaction;
-$("delete").onclick=async()=>{if(!sb)return;if(!confirm("Delete ALL cloud transactions? This affects every device."))return;const {data:{user}}=await sb.auth.getUser();if(!user)return;const {error}=await sb.from("transactions").delete().eq("user_id",user.id);if(error){toast("Delete failed");return}await syncNow();toast("All cloud transactions deleted")};
+$("delete").onclick=async()=>{if(!sb)return;if(!editId){toast("Please select a transaction to delete");return}if(!confirm("Delete this transaction?"))return;const{error}=await sb.from("transactions").delete().eq("id",editId);if(error){toast("Delete failed");return}editId=null;clearFields();render()};
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 function focusForm(){document.querySelectorAll(".panel")[1].scrollIntoView({behavior:"smooth"})}
 function historyPrev(){
