@@ -318,7 +318,7 @@ function editTransaction(id){
 function clearFields(){editId=null;$("save").textContent="▣ Save Transaction";$("amount").value="";$("commission").value="";$("reference").value="";$("date").value=localNow()}
 $("clear").onclick=clearFields;
 $("save").onclick=saveTransaction;
-$("delete").onclick=async()=>{if(!sb)return;if(!editId){toast("Please select a transaction to delete");return}if(!confirm("Delete this transaction?"))return;const{error}=await sb.from("transactions").delete().eq("id",editId);if(error){toast("Delete failed");return}editId=null;clearFields();render()};
+$("delete").onclick=async()=>{if(!sb||!editId){toast("Please select a transaction to delete");return}if(!confirm("Delete this transaction?"))return;const{error}=await sb.from("transactions").delete().eq("id",editId);if(error){toast("Delete failed");return}editId=null;clearFields();await syncNow();};
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");period=b.dataset.period;render()});
 function focusForm(){document.querySelectorAll(".panel")[1].scrollIntoView({behavior:"smooth"})}
 function historyPrev(){
