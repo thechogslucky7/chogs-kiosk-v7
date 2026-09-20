@@ -304,7 +304,7 @@ async function saveTransaction(){
  const amount=Number($("amount").value||0),commission=Number($("commission").value||0);
  if(amount<=0&&commission<=0){toast("Please enter an amount or commission");return}
  const {data:{user}}=await sb.auth.getUser();if(!user){$("login").classList.add("show");return}
- const item={date:$("date").value||localNow(),service:$("service").value,amount,commission,reference:$("reference").value.trim(),user_id:user.id};
+ const item={date:new Date($("date").value||localNow()).toISOString(),service:$("service").value,amount,commission,reference:$("reference").value.trim(),user_id:user.id};
  let result;
  if(editId) result=await sb.from("transactions").update(item).eq("id",editId);
  else result=await sb.from("transactions").insert(item);
