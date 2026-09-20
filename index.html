@@ -244,6 +244,7 @@ function toggleSelect(id){
   b.disabled=selectedIds.size===0;
 }
 function render(){
+  updateDeleteButton();
   const r=cloudRows.filter(visible),sum=k=>r.reduce((a,x)=>a+Number(x[k]||0),0),by=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.amount||0),0),incomeBy=s=>r.filter(x=>x.service===s).reduce((a,x)=>a+Number(x.commission||0),0);
 
   $("count").textContent=r.length;
